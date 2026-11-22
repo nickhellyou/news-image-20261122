@@ -57,7 +57,19 @@ def main():
 
     if hashlib.sha256(written).hexdigest() != digest:
         fail("copy failed verification: hash mismatch after writing")
+    if len(written) == 0:
+        fail("output validation failed: entry.png is empty (0 bytes)")
+    width = int.from_bytes(written[16:20], "big")
+    height = int.from_bytes(written[20:24], "big")
+    if (width, height) != (1024, 1024):
+        fail(
+            f"output validation failed: entry.png is {width}x{height}, "
+            "expected 1024x1024"
+        )
     print(f"wrote {target} ({len(data)} bytes, sha256 {digest})")
+    # Determinism guard: record the digest of the file actually produced,
+    # so repeated runs can be compared byte-for-byte.
+    print(f"determinism: output sha256 {digest}", file=sys.stderr)
 
 
 if __name__ == "__main__":
